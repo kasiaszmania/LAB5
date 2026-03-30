@@ -91,3 +91,37 @@ def test_invalid_month_raises_error():
    
     with pytest.raises(ValueError):
         manager.get_apartment_costs('A1', 2024, 13)
+
+class SimpleTenant:
+    def __init__(self, name, apartment):
+        self.name = name
+        self.apartment = apartment
+
+def test_create_tenant_settlements():
+    manager = LocalManager(SimpleParams())
+    manager.apartments = {'A1': 'M1', 'A2': 'M2', 'A3': 'M3'}
+    
+    t1 = SimpleTenant('Jan', 'A1')
+    t2 = SimpleTenant('Anna', 'A1')
+    t3 = SimpleTenant('Marek', 'A2')
+    manager.tenants = {1: t1, 2: t2, 3: t3}
+    
+    manager.bills = [
+        SimpleBill('A1', 2024, 3, 400.0),
+        SimpleBill('A2', 2024, 3, 100.0)
+    ]
+
+    res1 = manager.create_tenant_settlements('A1', 2024, 3)
+    assert len(res1) == 2
+    assert res1[0].tenant == 'Jan'
+    assert res1[0].balance_pln == -200.0
+    assert res1[1].tenant == 'Anna'
+    assert res1[1].balance_pln == -200.0
+
+    res2 = manager.create_tenant_settlements('A2', 2024, 3)
+    assert len(res2) == 1
+    assert res2[0].tenant == 'Marek'
+    assert res2[0].balance_pln == -100.0
+
+    res3 = manager.create_tenant_settlements('A3', 2024, 3)
+    assert res3 == []
